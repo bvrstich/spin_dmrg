@@ -9,7 +9,11 @@ namespace btas { typedef FermiQuantum Quantum; }; // Define FermiQuantum as defa
 
 #include <btas/QSPARSE/QSDArray.h>
 
+#include "MPSblas.h"
+
 #include "mpsite.h"
 #include "dmrg.h"
 #include "driver.h"
 #include "davidson.h"
+
+#include "Random.h"

@@ -11,6 +11,7 @@ BINNAME = dmrg.x
 CPPSRC	= main.cpp\
 			  driver.cpp\
 			  dmrg.cpp\
+			  Random.cpp\
 			  btas_defs.cpp
 			  
 OBJ	= $(CPPSRC:.cpp=.o)
