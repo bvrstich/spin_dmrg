@@ -617,14 +617,11 @@ namespace mpsxx {
     * @param D if > 0   this specifies the number of states to be kept
     *          if == 0  all the states are kept
     *          if < 0 all singular values > 10^-D are kept
-    * @return the total discarded weight
     */
    template<size_t N,class Q>
-      double compress(MPX<N,Q> &mpx,const MPS_DIRECTION &dir,int D){
+      void compress(MPX<N,Q> &mpx,const MPS_DIRECTION &dir,int D){
 
          int L = mpx.size();//length of the chain
-
-         double dweight = 0.0;
 
          if(dir == Left) {
 
@@ -642,7 +639,7 @@ namespace mpsxx {
                scal(nrm,mpx);
 
                //then svd
-               dweight += QSDgesvd(RightArrow,mpx[i],S,U,V,D);
+               QSDgesvd(RightArrow,mpx[i],S,U,V,D);
 
                //copy unitary to mpx
                QSDcopy(U,mpx[i]);
@@ -684,7 +681,7 @@ namespace mpsxx {
                scal(nrm,mpx);
 
                //then SVD: 
-               dweight += QSDgesvd(RightArrow,mpx[i],S,U,V,D);
+               QSDgesvd(RightArrow,mpx[i],S,U,V,D);
 
                //copy unitary to mpx
                QSDcopy(V,mpx[i]);
@@ -709,8 +706,6 @@ namespace mpsxx {
             scal(nrm,mpx);
 
          }
-
-         return dweight;
 
       }
 

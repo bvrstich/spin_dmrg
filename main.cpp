@@ -6,60 +6,43 @@ using namespace std;
 
 using namespace prototype;
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char* argv[]){
+
+   cout.precision(16);
+
   //
   // define working space for 20 sites chain
   //
 
-  int L =  10;
-  int M = 100;
+   int L =  100;
+   int D = 200;
 
-  MpStorages sites(L);
+   int d = 2;
 
-  //
-  // matrix product oeprator (spin-1/2 Heisenberg model)
-  //
+   global::init(D,d,L);
 
-  cout << "\tConstructing MPOs" << endl;
+   //set MPO to the Heisenberg model
+   mpsxx::MPO<Quantum> mpo = SpinHamiltonian::heisenberg(L,d,1.0,1.0,0.0);
 
-  if(0) {
-    //
-    // Nz = 2 * Sz / J = Jz = 1.0 / Hz = 0.0
-    //
-    int    Nz = 1;
-    int    Sz = 0; // Sz = 2 * 'actual' Sz
-    double J  = 1.0;
-    double Jz = 1.0;
-    double Hz = 0.0;
-    Heisenberg::construct_mpo(sites, Nz, J, Jz, Hz);
-    initialize(sites, FermiQuantum(0, Sz), M);
-  }
-  else {
-    //
-    // Half-filling / t = 1.0 / U = 1.0
-    //
-    int    Ne = L;
-    int    Sz = 0;
-    double t  = 1.0;
-    double U  = 1.0;
-    Hubbard::construct_mpo(sites, t, U);
-    initialize(sites, FermiQuantum(Ne, Sz), M);
-  }
+   //initialize the mps structure
+   mpsxx::MPS<Quantum> mps = mpsxx::create<Quantum>(L,Quantum(0),global::qp,10,global::rgen<double>); 
 
-  cout << "\tCalling DMRG program ( two-site algorithm) " << endl;
+   //and canonicalize it
+   compress(mps,mpsxx::Left,0);
+   compress(mps,mpsxx::Right,D);
 
-  double energy = 0.0;
+/*
+   double energy = dmrg(sites, TWOSITE, M);
 
-  energy = dmrg(sites, TWOSITE, M);
-  cout.precision(16);
-  cout << "\tGround state energy (two-site) = " << setw(20) << fixed << energy << endl << endl;
+   cout.precision(16);
+   cout << "\tGround state energy (two-site) = " << setw(20) << fixed << energy << endl << endl;
 
-  cout << "\tCalling DMRG program ( one-site algorithm) " << endl;
+   cout << "\tCalling DMRG program ( one-site algorithm) " << endl;
 
-  energy = dmrg(sites, ONESITE, M);
-  cout.precision(16);
-  cout << "\tGround state energy (one-site) = " << setw(20) << fixed << energy << endl << endl;
+   energy = dmrg(sites, ONESITE, M);
+   cout.precision(16);
+   cout << "\tGround state energy (one-site) = " << setw(20) << fixed << energy << endl << endl;
+*/
+   return 0;
 
-  return 0;
 }

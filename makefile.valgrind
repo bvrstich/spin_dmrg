@@ -12,6 +12,8 @@ CPPSRC	= main.cpp\
 			  driver.cpp\
 			  dmrg.cpp\
 			  Random.cpp\
+			  SpinHamiltonian.cpp\
+			  global.cpp\
 			  btas_defs.cpp
 			  
 OBJ	= $(CPPSRC:.cpp=.o)

@@ -4,16 +4,18 @@
 #include <btas/common/TVector.h>
 #include <btas/DENSE/TArray.h>
 
-#include "FermiQuantum.h"
-namespace btas { typedef FermiQuantum Quantum; }; // Define FermiQuantum as default quantum class
+#include "SpinQuantum.h"
+namespace btas { typedef SpinQuantum Quantum; }; // Define SpinQuantum as default quantum class
 
 #include <btas/QSPARSE/QSDArray.h>
 
 #include "MPSblas.h"
 
+#include "global.h"
 #include "mpsite.h"
 #include "dmrg.h"
 #include "driver.h"
 #include "davidson.h"
 
+#include "SpinHamiltonian.h"
 #include "Random.h"
