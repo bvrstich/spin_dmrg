@@ -2,11 +2,8 @@
 #include <iomanip>
 using namespace std;
 
-#include "FermiQuantum.h"
-namespace btas { typedef FermiQuantum Quantum; }; // Define FermiQuantum as default quantum class
+#include "include.h"
 
-#include "mpsite.h"
-#include "dmrg.h"
 using namespace prototype;
 
 int main(int argc, char* argv[])
@@ -15,8 +12,8 @@ int main(int argc, char* argv[])
   // define working space for 20 sites chain
   //
 
-  int L =  50;
-  int M = 200;
+  int L =  10;
+  int M = 100;
 
   MpStorages sites(L);
 

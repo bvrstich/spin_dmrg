@@ -3,15 +3,8 @@
 #include <vector>
 using namespace std;
 
-#include "FermiQuantum.h"
-namespace btas { typedef FermiQuantum Quantum; }; // Define FermiQuantum as default quantum class
+#include "include.h"
 
-#include <btas/QSPARSE/QSDArray.h>
-//#include "btas_template_specialize.h"
-
-#include "dmrg.h"
-#include "driver.h"
-#include "davidson.h"
 using namespace btas;
 
 //
