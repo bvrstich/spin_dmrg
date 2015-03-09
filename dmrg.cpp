@@ -8,7 +8,6 @@ using namespace std;
 using namespace btas;
 
 namespace algorithm {
-
 /*
    double optimize_onesite(bool forward, MpSite& sysdot, MpSite& envdot, int M)
    {
@@ -67,31 +66,47 @@ namespace algorithm {
 
       return energy;
    }
+*/
+   /**
+    * one sweep of the DMRG alorithm,
+    * @param mpo object containing the interactions
+    * @param mps initial MPS object
+    * @param algo flag for two or one site update algorithm
+    */
+   template<class Q>
+      double dmrg_sweep(const mpsxx::MPO<Q> &mpo,mpsxx::MPS<Q> &mps, DMRG_ALGORITHM algo){
 
-   double dmrg_sweep(MpStorages& sites, DMRG_ALGORITHM algo, int M){
+         double emin = 1.0e8;
+          /*        
+         // forward sweep
+         cout << "\t++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << endl;
+         cout << "\t\t\tFORWARD SWEEP" << endl;
+         cout << "\t++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << endl;
 
-      int    L    = sites.size();
-      double emin = 1.0e8;
+         for(int i = 0; i < global::L-1; ++i){
 
-      // fowrad sweep
-      cout << "\t++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << endl;
-      cout << "\t\t\tFORWARD SWEEP" << endl;
-      cout << "\t++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << endl;
-      for(int i = 0; i < L-1; ++i) {
-         // diagonalize
-         double eswp;
-         if(algo == ONESITE) eswp = optimize_onesite(1, sites[i], sites[i+1], M);
-         else                eswp = optimize_twosite(1, sites[i], sites[i+1], M);
-         if(eswp < emin) emin = eswp;
-         // print result
-         cout.precision(16);
-         cout << "\t\t\tEnergy = " << setw(24) << fixed << eswp << endl;
-      }
-      // backward sweep
-      cout << "\t++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << endl;
-      cout << "\t\t\tBACKWARD SWEEP" << endl;
-      cout << "\t++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << endl;
-      for(int i = L-1; i > 0; --i) {
+            // diagonalize
+            double eswp;
+
+            if(algo == ONESITE)
+               eswp = optimize_onesite(1, sites[i], sites[i+1], M);
+            else
+               eswp = optimize_twosite(1, sites[i], sites[i+1], M);
+
+            if(eswp < emin)
+               emin = eswp;
+
+            // print result
+            cout.precision(16);
+            cout << "\t\t\tEnergy = " << setw(24) << fixed << eswp << endl;
+
+         }
+
+         // backward sweep
+         cout << "\t++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << endl;
+         cout << "\t\t\tBACKWARD SWEEP" << endl;
+         cout << "\t++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << endl;
+         for(int i = L-1; i > 0; --i) {
          // diagonalize
          double eswp;
          if(algo == ONESITE) eswp = optimize_onesite(0, sites[i], sites[i-1], M);
@@ -100,10 +115,11 @@ namespace algorithm {
          // print result
          cout.precision(16);
          cout << "\t\t\tEnergy = " << setw(24) << fixed << eswp << endl;
+         }
+         */
+         return emin;
       }
-      return emin;
-   }
-*/
+
    /**
     * implementation of sweeping algorithm for dmrg optimization
     * @param mpo object containing the interactions
@@ -111,17 +127,26 @@ namespace algorithm {
     * @param algo flag for two or one site update algorithm
     */
    template<class Q>
-      double dmrg(mpsxx::MPO<Q> &mpo,mpsxx::MPS<Q> &mps, DMRG_ALGORITHM algo){
+      double dmrg(const mpsxx::MPO<Q> &mpo,mpsxx::MPS<Q> &mps, DMRG_ALGORITHM algo){
 
          double esav = 1.0e8;
-         /*
-            for(int iter = 0; iter < 100; ++iter){
+
+         //left and right renormalized operators
+         std::vector< QSDArray<3> > RO(global::L);
+         std::vector< QSDArray<3> > LO(global::L);
+
+         //initialize the right renormalized operator
+         algorithm::init_ro(mpo,mps,RO,LO);
+
+         cout << RO[global::L-2] << endl;
+
+         for(int iter = 0; iter < 100; ++iter){
 
             cout << "\t====================================================================================================" << endl;
             cout << "\t\tSWEEP ITERATION [ " << setw(4) << iter << " ] "   << endl;
             cout << "\t====================================================================================================" << endl;
 
-            double eswp = dmrg_sweep(sites, algo, M);
+            double eswp = dmrg_sweep(mpo,mps, algo);
 
             double edif = eswp - esav;
 
@@ -139,13 +164,45 @@ namespace algorithm {
             esav = eswp;
 
             if(fabs(edif) < 1.0e-8)
-            break;
-            }
-            */
+               break;
+         }
+
          return esav;
 
       }
 
-   template double dmrg<Quantum>(mpsxx::MPO<Quantum> &mpo,mpsxx::MPS<Quantum> &mps, DMRG_ALGORITHM algo);
+   /**
+    * initialize the right renormalized operator using a right canonical input mps
+    * @param mpo object containing the interactions
+    * @param mps initial MPS object
+    * @param RO on output the right renormalized operator
+    */
+   template<class Q> 
+      void init_ro(const mpsxx::MPO<Q> &mpo,const mpsxx::MPS<Q> &mps,std::vector< QSDArray<3> > &RO,std::vector< QSDArray<3> > &LO){
+
+         Qshapes<Q> qz(1, Q::zero());
+         Dshapes dz(qz.size(), 1);
+
+         TVector<Qshapes<Quantum>, 3> qshape = make_array( qz, qz, qz);
+         TVector<Dshapes,          3> dshape = make_array( dz, dz, dz);
+
+         RO[global::L-1].resize(Q::zero(), qshape, dshape);
+         RO[global::L-1] = 1.0;
+
+         for(int i = global::L-1; i > 0; --i) {
+
+            RO[i-1].clear();
+            Renormalize (0, mpo[i], RO[i], mps[i], mps[i], RO[i-1]);
+
+         }
+
+         LO[0].resize(Q::zero(), qshape, dshape);
+         LO[0] = 1.0;
+
+      }
+
+   template double dmrg<Quantum>(const mpsxx::MPO<Quantum> &mpo,mpsxx::MPS<Quantum> &mps, DMRG_ALGORITHM algo);
+   template double dmrg_sweep<Quantum>(const mpsxx::MPO<Quantum> &mpo,mpsxx::MPS<Quantum> &mps, DMRG_ALGORITHM algo);
+   template void init_ro<Quantum>(const mpsxx::MPO<Quantum> &,const mpsxx::MPS<Quantum> &,std::vector< QSDArray<3> > &RO,std::vector< QSDArray<3> > &LO);
 
 }

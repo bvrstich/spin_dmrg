@@ -9,11 +9,15 @@ namespace algorithm {
 /*
    double optimize_onesite(bool forward, MpSite& sysdot, MpSite& envdot, int M = 0);
    double optimize_twosite(bool forward, MpSite& sysdot, MpSite& envdot, int M = 0);
-
-   double dmrg_sweep(MpStorages& sites, DMRG_ALGORITHM algo, int M = 0);
-  */
+ */
    template<class Q>
-      double dmrg(mpsxx::MPO<Q> &,mpsxx::MPS<Q> &, DMRG_ALGORITHM algo);
+      double dmrg_sweep(const mpsxx::MPO<Q> &,mpsxx::MPS<Q> &, DMRG_ALGORITHM algo);
+
+   template<class Q>
+      double dmrg(const mpsxx::MPO<Q> &,mpsxx::MPS<Q> &, DMRG_ALGORITHM algo);
+
+   template<class Q> 
+      void init_ro(const mpsxx::MPO<Q> &,const mpsxx::MPS<Q> &,std::vector< QSDArray<3> > &RO,std::vector< QSDArray<3> > &LO);
 
 };
 
