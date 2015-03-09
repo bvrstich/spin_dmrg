@@ -7,27 +7,27 @@
 
 namespace prototype {
 
-struct MpSite {
-  //
-  // matrix product operator (MPO)
-  //
-  btas::QSDArray<4> mpo;
+   struct MpSite {
+      //
+      // matrix product operator (MPO)
+      //
+      btas::QSDArray<4> mpo;
 
-  //
-  // matrix product state (MPS) / left-canonical / right-canonical / wavefunction at this site
-  //
-  btas::QSDArray<3> lmps;
-  btas::QSDArray<3> rmps;
-  btas::QSDArray<3> wfnc;
+      //
+      // matrix product state (MPS) / left-canonical / right-canonical / wavefunction at this site
+      //
+      btas::QSDArray<3> lmps;
+      btas::QSDArray<3> rmps;
+      btas::QSDArray<3> wfnc;
 
-  //
-  // renormalized operator
-  //
-  btas::QSDArray<3> lopr;
-  btas::QSDArray<3> ropr;
-};
+      //
+      // renormalized operator
+      //
+      btas::QSDArray<3> lopr;
+      btas::QSDArray<3> ropr;
+   };
 
-typedef std::vector<MpSite> MpStorages;
+   typedef std::vector<MpSite> MpStorages;
 
 };
 
