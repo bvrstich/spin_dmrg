@@ -4,8 +4,6 @@ using namespace std;
 
 #include "include.h"
 
-using namespace prototype;
-
 int main(int argc, char* argv[]){
 
    cout.precision(16);
@@ -31,9 +29,8 @@ int main(int argc, char* argv[]){
    compress(mps,mpsxx::Left,0);
    compress(mps,mpsxx::Right,D);
 
+   double energy = algorithm::dmrg(mpo,mps, algorithm::TWOSITE);
 /*
-   double energy = dmrg(sites, TWOSITE, M);
-
    cout.precision(16);
    cout << "\tGround state energy (two-site) = " << setw(20) << fixed << energy << endl << endl;
 

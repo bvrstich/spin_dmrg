@@ -12,7 +12,6 @@ namespace btas { typedef SpinQuantum Quantum; }; // Define SpinQuantum as defaul
 #include "MPSblas.h"
 
 #include "global.h"
-#include "mpsite.h"
 #include "dmrg.h"
 #include "driver.h"
 #include "davidson.h"
