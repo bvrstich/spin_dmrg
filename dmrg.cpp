@@ -138,8 +138,6 @@ namespace algorithm {
          //initialize the right renormalized operator
          algorithm::init_ro(mpo,mps,RO,LO);
 
-         cout << RO[global::L-2] << endl;
-
          for(int iter = 0; iter < 100; ++iter){
 
             cout << "\t====================================================================================================" << endl;

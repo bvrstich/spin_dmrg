@@ -29,6 +29,9 @@ int main(int argc, char* argv[]){
    compress(mps,mpsxx::Left,0);
    compress(mps,mpsxx::Right,D);
 
+   compress(mps,mpsxx::Left,0);
+   compress(mps,mpsxx::Right,0);
+
    double energy = algorithm::dmrg(mpo,mps, algorithm::TWOSITE);
 /*
    cout.precision(16);

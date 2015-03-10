@@ -631,14 +631,7 @@ namespace mpsxx {
 
             for(int i = 0;i < L - 1;++i){
 
-               //redistribute the norm over the chain: for stability reasons
-               double nrm = sqrt(QSDdotc(mpx[i],mpx[i]));
-
-               QSDscal(1.0/nrm,mpx[i]);
-
-               scal(nrm,mpx);
-
-               //then svd
+               //svd of tensor on site i
                QSDgesvd(RightArrow,mpx[i],S,U,V,D);
 
                //copy unitary to mpx
@@ -657,13 +650,6 @@ namespace mpsxx {
 
             }
 
-            //redistribute the norm over the chain
-            double nrm = sqrt(QSDdotc(mpx[L-1],mpx[L-1]));
-
-            QSDscal(1.0/nrm,mpx[L-1]);
-
-            scal(nrm,mpx);
-
          }
          else{//right
 
@@ -673,14 +659,7 @@ namespace mpsxx {
 
             for(int i = L - 1;i > 0;--i){
 
-               //redistribute the norm over the chain: for stability reasons
-               double nrm = sqrt(QSDdotc(mpx[i],mpx[i]));
-
-               QSDscal(1.0/nrm,mpx[i]);
-
-               scal(nrm,mpx);
-
-               //then SVD: 
+               //SVD tensor on site i: 
                QSDgesvd(RightArrow,mpx[i],S,U,V,D);
 
                //copy unitary to mpx
@@ -698,12 +677,6 @@ namespace mpsxx {
                QSDcontract(1.0,V,shape(N-1),U,shape(0),0.0,mpx[i - 1]);
 
             }
-
-            double nrm = sqrt(QSDdotc(mpx[0],mpx[0]));
-
-            QSDscal(1.0/nrm,mpx[0]);
-
-            scal(nrm,mpx);
 
          }
 
@@ -823,7 +796,7 @@ namespace mpsxx {
             //from left to right
             QSDArray<5> loc;
 
-            QSDindexed_contract(1.0,O[0],shape(m,n,k,o),A[0],shape(j,k,l),0.0,loc,shape(j,m,n,l,o));
+            Contract(1.0,O[0],shape(m,n,k,o),A[0],shape(j,k,l),0.0,loc,shape(j,m,n,l,o));
 
             //merge 2 rows together
             TVector<Qshapes<Q>,2> qmerge;
@@ -844,7 +817,7 @@ namespace mpsxx {
             //this will contain the right going part
             QSDArray<3> EO;
 
-            QSDindexed_contract(1.0,B[0].conjugate(),shape(j,k,l),tmp,shape(j,k,m,n),0.0,EO,shape(m,n,l));
+            Contract(1.0,B[0].conjugate(),shape(j,k,l),tmp,shape(j,k,m,n),0.0,EO,shape(m,n,l));
 
             QSDArray<4> I1;
             QSDArray<4> I2;
@@ -853,15 +826,15 @@ namespace mpsxx {
 
                I1.clear();
 
-               QSDindexed_contract(1.0,EO,shape(j,k,l),A[i],shape(j,m,n),0.0,I1,shape(k,l,n,m));
+               Contract(1.0,EO,shape(j,k,l),A[i],shape(j,m,n),0.0,I1,shape(k,l,n,m));
 
                I2.clear();
 
-               QSDindexed_contract(1.0,I1,shape(k,l,n,m),O[i],shape(k,j,m,o),0.0,I2,shape(l,j,n,o));
+               Contract(1.0,I1,shape(k,l,n,m),O[i],shape(k,j,m,o),0.0,I2,shape(l,j,n,o));
 
                EO.clear();
 
-               QSDindexed_contract(1.0,I2,shape(l,j,n,o),B[i].conjugate(),shape(l,j,k),0.0,EO,shape(n,o,k));
+               Contract(1.0,I2,shape(l,j,n,o),B[i].conjugate(),shape(l,j,k),0.0,EO,shape(n,o,k));
 
                //bad style: if no blocks remain, return zero
                if(EO.begin() == EO.end())
@@ -879,7 +852,7 @@ namespace mpsxx {
             //from right to left
             QSDArray<5> loc;
 
-            QSDindexed_contract(1.0,O[L - 1],shape(j,k,l,m),A[L - 1],shape(o,l,n),0.0,loc,shape(o,j,k,n,m));
+            Contract(1.0,O[L - 1],shape(j,k,l,m),A[L - 1],shape(o,l,n),0.0,loc,shape(o,j,k,n,m));
 
             //merge 2 columns together
             TVector<Qshapes<Q>,2> qmerge;
@@ -899,7 +872,7 @@ namespace mpsxx {
 
             //this will contain the left going part
             QSDArray<3> EO;
-            QSDindexed_contract(1.0,tmp,shape(j,k,l,m),B[L-1].conjugate(),shape(n,l,m),0.0,EO,shape(j,k,n));
+            Contract(1.0,tmp,shape(j,k,l,m),B[L-1].conjugate(),shape(n,l,m),0.0,EO,shape(j,k,n));
 
             QSDArray<4> I1;
             QSDArray<4> I2;
@@ -908,15 +881,15 @@ namespace mpsxx {
 
                I1.clear();
 
-               QSDindexed_contract(1.0,A[i],shape(j,k,l),EO,shape(l,m,n),0.0,I1,shape(j,k,m,n));
+               Contract(1.0,A[i],shape(j,k,l),EO,shape(l,m,n),0.0,I1,shape(j,k,m,n));
 
                I2.clear();
 
-               QSDindexed_contract(1.0,O[i],shape(l,o,k,m),I1,shape(j,k,m,n),0.0,I2,shape(j,l,o,n));
+               Contract(1.0,O[i],shape(l,o,k,m),I1,shape(j,k,m,n),0.0,I2,shape(j,l,o,n));
 
                EO.clear();
 
-               QSDindexed_contract(1.0,B[i].conjugate(),shape(k,o,n),I2,shape(j,l,o,n),0.0,EO,shape(j,l,k));
+               Contract(1.0,B[i].conjugate(),shape(k,o,n),I2,shape(j,l,o,n),0.0,EO,shape(j,l,k));
 
                //bad style: if no blocks remain, return zero
                if(EO.begin() == EO.end())
@@ -961,7 +934,7 @@ namespace mpsxx {
                //clear the tmp object first
                tmp.clear();
 
-               QSDindexed_contract(1.0,A[i],shape(j,k,l,m),X[i],shape(n,l,o),0.0,tmp,shape(n,j,k,o,m));
+               Contract(1.0,A[i],shape(j,k,l,m),X[i],shape(n,l,o),0.0,tmp,shape(n,j,k,o,m));
 
                //merge 2 rows together
                TVector<Qshapes<Q>,2> qmerge;
@@ -1015,7 +988,7 @@ namespace mpsxx {
             QSDArray<5> tmp;
             QSDArray<4> mrows;
 
-            QSDindexed_contract(1.0,A[0],shape(j,k,l,m),X[0],shape(n,l,o),0.0,tmp,shape(n,j,k,o,m));
+            Contract(1.0,A[0],shape(j,k,l,m),X[0],shape(n,l,o),0.0,tmp,shape(n,j,k,o,m));
 
             //merge 2 rows together
             TVector<Qshapes<Q>,2> qmerge1;
@@ -1079,7 +1052,7 @@ namespace mpsxx {
                //clear the tmp object first
                tmp.clear();
 
-               QSDindexed_contract(1.0,A[i],shape(j,k,l,m),X[i],shape(n,l,o),0.0,tmp,shape(n,j,k,o,m));
+               Contract(1.0,A[i],shape(j,k,l,m),X[i],shape(n,l,o),0.0,tmp,shape(n,j,k,o,m));
 
                //merge 2 rows together
                for(int r = 0;r < 2;++r){
@@ -1139,7 +1112,7 @@ namespace mpsxx {
             //clear the tmp object first
             tmp.clear();
 
-            QSDindexed_contract(1.0,A[L - 1],shape(j,k,l,m),X[L - 1],shape(n,l,o),0.0,tmp,shape(n,j,k,o,m));
+            Contract(1.0,A[L - 1],shape(j,k,l,m),X[L - 1],shape(n,l,o),0.0,tmp,shape(n,j,k,o,m));
 
             //merge 2 rows together
             for(int r = 0;r < 2;++r){
@@ -1261,7 +1234,7 @@ namespace mpsxx {
                //clear the tmp object first
                tmp.clear();
 
-               QSDindexed_contract(1.0,A[i],shape(n,o,k,p),B[i],shape(j,k,l,m),0.0,tmp,shape(n,j,o,l,p,m));
+               Contract(1.0,A[i],shape(n,o,k,p),B[i],shape(j,k,l,m),0.0,tmp,shape(n,j,o,l,p,m));
 
                //merge 2 rows together
                TVector<Qshapes<Q>,2> qmerge;
@@ -1320,7 +1293,7 @@ namespace mpsxx {
             //clear the tmp object first
             tmp.clear();
 
-            QSDindexed_contract(1.0,A[0],shape(n,o,k,p),B[0],shape(j,k,l,m),0.0,tmp,shape(n,j,o,l,p,m));
+            Contract(1.0,A[0],shape(n,o,k,p),B[0],shape(j,k,l,m),0.0,tmp,shape(n,j,o,l,p,m));
 
             //merge 2 rows together
             TVector<Qshapes<Q>,2> qmerge1;
@@ -1387,7 +1360,7 @@ namespace mpsxx {
                //clear the tmp object first
                tmp.clear();
 
-               QSDindexed_contract(1.0,A[i],shape(n,o,k,p),B[i],shape(j,k,l,m),0.0,tmp,shape(n,j,o,l,p,m));
+               Contract(1.0,A[i],shape(n,o,k,p),B[i],shape(j,k,l,m),0.0,tmp,shape(n,j,o,l,p,m));
 
                //merge 2 rows together
                for(int r = 0;r < 2;++r){
@@ -1446,7 +1419,7 @@ namespace mpsxx {
             //clear the tmp object first
             tmp.clear();
 
-            QSDindexed_contract(1.0,A[L - 1],shape(n,o,k,p),B[L - 1],shape(j,k,l,m),0.0,tmp,shape(n,j,o,l,p,m));
+            Contract(1.0,A[L - 1],shape(n,o,k,p),B[L - 1],shape(j,k,l,m),0.0,tmp,shape(n,j,o,l,p,m));
 
             //merge 2 rows together
             for(int r = 0;r < 2;++r){
@@ -1572,7 +1545,7 @@ namespace mpsxx {
 
             enum {j,k,l,m,n,o};
 
-            QSDindexed_contract(1.0,X[L-1],shape(j,k,l),Y[L-1].conjugate(),shape(m,k,l),0.0,E,shape(j,m));
+            Contract(1.0,X[L-1],shape(j,k,l),Y[L-1].conjugate(),shape(m,k,l),0.0,E,shape(j,m));
 
             //this will contain an intermediate
             QSDArray<3> I;
@@ -1580,13 +1553,13 @@ namespace mpsxx {
             for(int i = L - 2;i >= 0;--i){
 
                //construct intermediate, i.e. paste X to E
-               QSDindexed_contract(1.0,X[i],shape(j,k,l),E,shape(l,m),0.0,I,shape(j,k,m));
+               Contract(1.0,X[i],shape(j,k,l),E,shape(l,m),0.0,I,shape(j,k,m));
 
                //clear structure of E
                E.clear();
 
                //construct E for site i by contracting I with Y
-               QSDindexed_contract(1.0,Y[i].conjugate(),shape(j,k,l),I,shape(m,k,l),0.0,E,shape(m,j));
+               Contract(1.0,Y[i].conjugate(),shape(j,k,l),I,shape(m,k,l),0.0,E,shape(m,j));
 
                I.clear();
 
