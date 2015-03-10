@@ -8,37 +8,63 @@ using namespace btas;
 
 namespace algorithm {
 
+   /**
+    * compute a guess for the initial value of the next site
+    * @param forward , forward or backward sweep
+    * @param mps0 unitary mps on site '0'
+    * @param wfn0 mps on site '0' after update before canonicalization
+    * @param mps1 unitary mps on site '1'
+    * @param wfn1 guess for next step, update on site '1'
+    */
    void ComputeGuess (bool forward, const btas::QSDArray<3>& mps0, const btas::QSDArray<3>& wfn0,
+
          const btas::QSDArray<3>& mps1, btas::QSDArray<3>& wfn1) {
 
       using btas::NoTrans;
       using btas::ConjTrans;
 
       if(forward) {
+
          btas::QSDArray<2> lres;
          btas::QSDgemm(ConjTrans, NoTrans, 1.0, mps0, wfn0, 1.0, lres);
+
          wfn1.clear();
          btas::QSDgemm(  NoTrans, NoTrans, 1.0, lres, mps1, 1.0, wfn1);
+
       }
       else {
+
          btas::QSDArray<2> rres;
          btas::QSDgemm(NoTrans, ConjTrans, 1.0, wfn0, mps0, 1.0, rres);
+
          wfn1.clear();
          btas::QSDgemm(NoTrans,   NoTrans, 1.0, mps1, rres, 1.0, wfn1);
+
       }
    }
 
+   /**
+    * use svd to canonicalize tensor
+    * @param wfn0 input tensor to be decomposed
+    * @param mps0 if forward, mps0 will be the U, or left unitary matrix of the SVD
+    *             else mps0 will be the VT, or right unitary matrix of the SVD
+    * @param M number of states to be retained in svd
+    */
    void Canonicalize (bool forward, const btas::QSDArray<3>& wfn0, btas::QSDArray<3>& mps0, int M) {
 
       if(forward) {
+
          btas::SDArray<1> s;
          btas::QSDArray<2> v;
          btas::QSDgesvd(btas::LeftArrow,  wfn0, s, mps0, v, M);
+
       }
       else {
+
          btas::SDArray<1> s;
          btas::QSDArray<2> u;
          btas::QSDgesvd(btas::RightArrow, wfn0, s, u, mps0, M);
+
       }
    }
 
