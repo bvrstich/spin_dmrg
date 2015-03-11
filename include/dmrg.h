@@ -21,6 +21,11 @@ namespace algorithm {
             
             std::vector< QSDArray<3> > &LO, std::vector< QSDArray<3> > &RO );
 
+   template<class Q>
+      double optimize_twosite(bool forward,int site, const mpsxx::MPO<Q> &mpo, mpsxx::MPS<Q> &mps,
+            
+            std::vector< QSDArray<3> > &LO, std::vector< QSDArray<3> > &RO );
+
 
 };
 

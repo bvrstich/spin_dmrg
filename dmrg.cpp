@@ -20,90 +20,116 @@ namespace algorithm {
     */
    template<class Q>
       double optimize_onesite(bool forward,int site, const mpsxx::MPO<Q> &mpo, mpsxx::MPS<Q> &mps,
-            
+
             std::vector< QSDArray<3> > &LO, std::vector< QSDArray<3> > &RO ) {
 
-      boost::function<void(const QSDArray<3>&, QSDArray<3>&)>
-         f_contract = boost::bind(ComputeSigmaVector, mpo[site], LO[site], RO[site], _1, _2);
+         boost::function<void(const QSDArray<3>&, QSDArray<3>&)>
+            f_contract = boost::bind(ComputeSigmaVector, mpo[site], LO[site], RO[site], _1, _2);
 
-      QSDArray<3> diag(mps[site].q(), mps[site].qshape());
+         QSDArray<3> diag(mps[site].q(), mps[site].qshape());
 
-      ComputeDiagonal(mpo[site], LO[site], RO[site], diag);
+         ComputeDiagonal(mpo[site], LO[site], RO[site], diag);
 
-      double energy = davidson::diagonalize(f_contract, diag, mps[site]);
+         double energy = davidson::diagonalize(f_contract, diag, mps[site]);
 
-      if(forward) {
+         if(forward) {
 
-         QSDArray<3> U;
-         Canonicalize(true, mps[site] , U, global::D);
+            QSDArray<3> U;
+            Canonicalize(true, mps[site] , U, global::D);
 
-         QSDArray<3> tmp3;
-         ComputeGuess(true, U, mps[site], mps[site+1], tmp3);
+            QSDArray<3> tmp3;
+            ComputeGuess(true, U, mps[site], mps[site+1], tmp3);
 
-         //move the updated tensors
-         mps[site] = std::move(U);
-         mps[site+1] = std::move(tmp3);
+            //move the updated tensors
+            mps[site] = std::move(U);
+            mps[site+1] = std::move(tmp3);
 
-         //make new operator
-         Renormalize (true, mpo[site],LO[site], mps[site], mps[site], LO[site+1]);
+            //make new operator
+            Renormalize (true, mpo[site],LO[site], mps[site], mps[site], LO[site+1]);
+
+         }
+         else {
+
+            QSDArray<3> VT;
+            Canonicalize(false, mps[site], VT, global::D);
+
+            QSDArray<3> tmp3;
+            ComputeGuess(false, VT, mps[site], mps[site-1], tmp3);
+
+            //move the updated tensors
+            mps[site] = std::move(VT);
+            mps[site-1] = std::move(tmp3);
+
+            Renormalize (false, mpo[site], RO[site], mps[site], mps[site], RO[site-1]);
+
+         }
+
+         return energy;
 
       }
-      else {
 
-         QSDArray<3> VT;
-         Canonicalize(false, mps[site], VT, global::D);
+   /**
+    * imlementation of the two-site algorithm for dmrg update
+    * @param forward or backward sweep
+    * @param site , location of the current tensor
+    * @param mpo containing the hamiltonian
+    * @param mps current state 
+    * @param LO left renormalized operator
+    * @param RO right renormalized operator
+    */
+   template<class Q>
+      double optimize_twosite(bool forward,int site, const mpsxx::MPO<Q> &mpo, mpsxx::MPS<Q> &mps,
 
-         QSDArray<3> tmp3;
-         ComputeGuess(false, VT, mps[site], mps[site-1], tmp3);
+            std::vector< QSDArray<3> > &LO, std::vector< QSDArray<3> > &RO ) {
 
-         //move the updated tensors
-         mps[site] = std::move(VT);
-         mps[site-1] = std::move(tmp3);
+         QSDArray<4> wfnc;
+         QSDArray<4> diag;
 
-         Renormalize (false, mpo[site], RO[site], mps[site], mps[site], RO[site-1]);
+         boost::function<void(const QSDArray<4>&, QSDArray<4>&)> f_contract;
+
+         //make two-site object
+         if(forward) {
+
+            QSDgemm(NoTrans, NoTrans, 1.0, mps[site], mps[site+1], 0.0, wfnc);
+
+            f_contract = boost::bind(ComputeSigmaVector, mpo[site], mpo[site+1], LO[site], RO[site+1], _1, _2);
+
+            diag.resize(wfnc.q(), wfnc.qshape());
+            ComputeDiagonal(mpo[site], mpo[site+1], LO[site],RO[site+1], diag);
+
+         }
+         else {
+
+            QSDgemm(NoTrans, NoTrans, 1.0, mps[site-1], mps[site], 0.0, wfnc);
+
+            f_contract = boost::bind(ComputeSigmaVector, mpo[site-1], mpo[site], LO[site-1], RO[site], _1, _2);
+
+            diag.resize(wfnc.q(), wfnc.qshape());
+            ComputeDiagonal(mpo[site-1], mpo[site], LO[site-1],RO[site], diag);
+
+         }
+
+         double energy = davidson::diagonalize(f_contract, diag, wfnc);
+
+         if(forward){
+
+            Canonicalize(true,wfnc, mps[site], mps[site+1], global::D);
+
+            Renormalize (true, mpo[site],  LO[site], mps[site], mps[site], LO[site+1]);
+
+         }
+         else{
+
+            Canonicalize(false,wfnc, mps[site], mps[site-1], global::D);
+
+            Renormalize (false, mpo[site],  RO[site], mps[site], mps[site], RO[site-1]);
+
+         }
+
+         return energy;
 
       }
 
-      return energy;
-
-   }
-
-/*
-   double optimize_twosite(bool forward, MpSite& sysdot, MpSite& envdot, int M) {
-
-      QSDArray<4> wfnc;
-      QSDArray<4> diag;
-      boost::function<void(const QSDArray<4>&, QSDArray<4>&)> f_contract;
-      if(forward) {
-         QSDgemm(NoTrans, NoTrans, 1.0, sysdot.wfnc, envdot.rmps, 1.0, wfnc);
-         f_contract = boost::bind(ComputeSigmaVector, sysdot.mpo, envdot.mpo, sysdot.lopr, envdot.ropr, _1, _2);
-         diag.resize(wfnc.q(), wfnc.qshape());
-         ComputeDiagonal(sysdot.mpo, envdot.mpo, sysdot.lopr, envdot.ropr, diag);
-      }
-      else {
-         QSDgemm(NoTrans, NoTrans, 1.0, envdot.lmps, sysdot.wfnc, 1.0, wfnc);
-         f_contract = boost::bind(ComputeSigmaVector, envdot.mpo, sysdot.mpo, envdot.lopr, sysdot.ropr, _1, _2);
-         diag.resize(wfnc.q(), wfnc.qshape());
-         ComputeDiagonal(envdot.mpo, sysdot.mpo, envdot.lopr, sysdot.ropr, diag);
-      }
-
-      double energy = davidson::diagonalize(f_contract, diag, wfnc);
-
-      if(forward) {
-         Canonicalize(1,        wfnc, sysdot.lmps, envdot.wfnc, M);
-         envdot.lopr.clear();
-         Renormalize (1, sysdot.mpo,  sysdot.lopr, sysdot.lmps, sysdot.lmps, envdot.lopr);
-      }
-      else {
-         Canonicalize(0,        wfnc, sysdot.rmps, envdot.wfnc, M);
-         envdot.ropr.clear();
-         Renormalize (0, sysdot.mpo,  sysdot.ropr, sysdot.rmps, sysdot.rmps, envdot.ropr);
-      }
-
-      return energy;
-   }
-
-  */
    /**
     * one sweep of the DMRG alorithm,
     * @param mpo object containing the interactions
@@ -112,26 +138,25 @@ namespace algorithm {
     */
    template<class Q>
       double dmrg_sweep(const mpsxx::MPO<Q> &mpo,mpsxx::MPS<Q> &mps,std::vector< QSDArray<3> > &LO,
-            
+
             std::vector< QSDArray<3> > &RO, DMRG_ALGORITHM algo){
 
          double emin = 1.0e8;
-            
+
          // forward sweep
          cout << "\t++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << endl;
          cout << "\t\t\tFORWARD SWEEP" << endl;
          cout << "\t++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << endl;
 
-         //for(int i = 0; i < global::L-1; ++i){
-int i = 0;
+         for(int i = 0; i < global::L-1; ++i){
+
             // diagonalize
             double eswp;
 
-          //  if(algo == ONESITE)
+            if(algo == ONESITE)
                eswp = optimize_onesite(true,i, mpo, mps,LO,RO );
-               /*
-           // else
-               eswp = optimize_twosite(true, sites[i], sites[i+1], M);
+            else
+               eswp = optimize_twosite(true,i, mpo, mps,LO,RO );
 
             if(eswp < emin)
                emin = eswp;
@@ -147,15 +172,15 @@ int i = 0;
          cout << "\t\t\tBACKWARD SWEEP" << endl;
          cout << "\t++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++" << endl;
 
-         for(int i = L-1; i > 0; --i) {
+         for(int i = global::L-1; i > 0; --i) {
 
             // diagonalize
             double eswp;
 
             if(algo == ONESITE)
-               eswp = optimize_onesite(false, sites[i], sites[i-1], M);
+               eswp = optimize_onesite(false,i, mpo, mps,LO,RO );
             else
-               eswp = optimize_twosite(false, sites[i], sites[i-1], M);
+               eswp = optimize_twosite(false,i, mpo, mps,LO,RO );
 
             if(eswp < emin)
                emin = eswp;
@@ -165,7 +190,7 @@ int i = 0;
             cout << "\t\t\tEnergy = " << setw(24) << fixed << eswp << endl;
 
          }
-*/
+
          return emin;
 
       }
@@ -237,12 +262,8 @@ int i = 0;
          RO[global::L-1].resize(Q::zero(), qshape, dshape);
          RO[global::L-1] = 1.0;
 
-         for(int i = global::L-1; i > 0; --i) {
-
-            RO[i-1].clear();
+         for(int i = global::L-1; i > 0; --i)
             Renormalize (0, mpo[i], RO[i], mps[i], mps[i], RO[i-1]);
-
-         }
 
          LO[0].resize(Q::zero(), qshape, dshape);
          LO[0] = 1.0;
@@ -253,13 +274,17 @@ int i = 0;
    template double dmrg<Quantum>(const mpsxx::MPO<Quantum> &mpo,mpsxx::MPS<Quantum> &mps, DMRG_ALGORITHM algo);
 
    template double dmrg_sweep<Quantum>(const mpsxx::MPO<Quantum> &mpo,mpsxx::MPS<Quantum> &mps,
-         
+
          std::vector< QSDArray<3> > &LO,std::vector< QSDArray<3> > &RO, DMRG_ALGORITHM algo);
 
    template void init_ro<Quantum>(const mpsxx::MPO<Quantum> &,const mpsxx::MPS<Quantum> &,std::vector< QSDArray<3> > &LO,std::vector< QSDArray<3> > &RO);
 
    template double optimize_onesite<Quantum>(bool forward,int site, const mpsxx::MPO<Quantum> &, mpsxx::MPS<Quantum> &,
-         
+
+         std::vector< QSDArray<3> > &, std::vector< QSDArray<3> > & );
+
+   template double optimize_twosite<Quantum>(bool forward,int site, const mpsxx::MPO<Quantum> &, mpsxx::MPS<Quantum> &,
+
          std::vector< QSDArray<3> > &, std::vector< QSDArray<3> > & );
 
 

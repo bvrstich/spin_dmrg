@@ -14,17 +14,15 @@ class SpinQuantum;
 namespace SpinHamiltonian {
 
    //some functions which initialize an MPO to a certian Hamiltonian
-   MPO<SpinQuantum> ising(int,int,double,double);
+   MPO<SpinQuantum> ising(double,double);
 
-   MPO<SpinQuantum> XY(int,int,double,double);
+   MPO<SpinQuantum> heisenberg(double,double,double);
 
-   MPO<SpinQuantum> heisenberg(int,int,double,double,double);
-
-   MPO<SpinQuantum> raise(int,int);
-
-   MPO<SpinQuantum> lower(int,int);
-
-   MPO<SpinQuantum> Sz(int,int);
+   //general functions to make MPO construction easier
+   void insert_id(QSDArray<4> &O,int row,int column,double value);
+   void insert_Sz(QSDArray<4> &O,int row,int column,double value);
+   void insert_Sp(QSDArray<4> &O,int row,int column,double value);
+   void insert_Sm(QSDArray<4> &O,int row,int column,double value);
 
 }
 

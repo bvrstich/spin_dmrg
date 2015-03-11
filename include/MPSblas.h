@@ -612,6 +612,8 @@ namespace mpsxx {
 
    /**
     * Compress an MP object by performing an SVD
+    * @param stab_norm if true, redistribute the norm of each tensor over the whole chain for stability
+    *                   watch out, end result is not canonical then!
     * @param mpx is the input MPX, will be lost/overwritten by the compressed MPX
     * @param dir direction of the canonicalization, from left to right if Left, right to left if Right
     * @param D if > 0   this specifies the number of states to be kept
@@ -619,7 +621,7 @@ namespace mpsxx {
     *          if < 0 all singular values > 10^-D are kept
     */
    template<size_t N,class Q>
-      void compress(MPX<N,Q> &mpx,const MPS_DIRECTION &dir,int D){
+      void compress(bool stab_norm,MPX<N,Q> &mpx,const MPS_DIRECTION &dir,int D){
 
          int L = mpx.size();//length of the chain
 
@@ -630,6 +632,17 @@ namespace mpsxx {
             QSDArray<N> U;//U --> unitary left normalized matrix
 
             for(int i = 0;i < L - 1;++i){
+
+               if(stab_norm){
+
+                  //redistribute the norm over the chain: for stability reasons
+                  double nrm = sqrt(QSDdotc(mpx[i],mpx[i]));
+
+                  QSDscal(1.0/nrm,mpx[i]);
+
+                  scal(nrm,mpx);
+
+               }
 
                //svd of tensor on site i
                QSDgesvd(RightArrow,mpx[i],S,U,V,D);
@@ -650,6 +663,17 @@ namespace mpsxx {
 
             }
 
+            if(stab_norm){
+
+               //redistribute the norm over the chain
+               double nrm = sqrt(QSDdotc(mpx[L-1],mpx[L-1]));
+
+               QSDscal(1.0/nrm,mpx[L-1]);
+
+               scal(nrm,mpx);
+
+            }
+
          }
          else{//right
 
@@ -658,6 +682,17 @@ namespace mpsxx {
             QSDArray<2> U;//U
 
             for(int i = L - 1;i > 0;--i){
+
+               if(stab_norm){
+
+                  //redistribute the norm over the chain: for stability reasons
+                  double nrm = sqrt(QSDdotc(mpx[i],mpx[i]));
+
+                  QSDscal(1.0/nrm,mpx[i]);
+
+                  scal(nrm,mpx);
+
+               }
 
                //SVD tensor on site i: 
                QSDgesvd(RightArrow,mpx[i],S,U,V,D);
@@ -675,6 +710,16 @@ namespace mpsxx {
                mpx[i - 1].clear();
 
                QSDcontract(1.0,V,shape(N-1),U,shape(0),0.0,mpx[i - 1]);
+
+            }
+
+            if(stab_norm){
+
+               double nrm = sqrt(QSDdotc(mpx[0],mpx[0]));
+
+               QSDscal(1.0/nrm,mpx[0]);
+
+               scal(nrm,mpx);
 
             }
 

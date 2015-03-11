@@ -26,19 +26,19 @@ namespace algorithm {
       if(forward) {
 
          btas::QSDArray<2> lres;
-         btas::QSDgemm(ConjTrans, NoTrans, 1.0, mps0, wfn0, 1.0, lres);
+         btas::QSDgemm(ConjTrans, NoTrans, 1.0, mps0, wfn0, 0.0, lres);
 
          wfn1.clear();
-         btas::QSDgemm(  NoTrans, NoTrans, 1.0, lres, mps1, 1.0, wfn1);
+         btas::QSDgemm(  NoTrans, NoTrans, 1.0, lres, mps1, 0.0, wfn1);
 
       }
       else {
 
          btas::QSDArray<2> rres;
-         btas::QSDgemm(NoTrans, ConjTrans, 1.0, wfn0, mps0, 1.0, rres);
+         btas::QSDgemm(NoTrans, ConjTrans, 1.0, wfn0, mps0, 0.0, rres);
 
          wfn1.clear();
-         btas::QSDgemm(NoTrans,   NoTrans, 1.0, mps1, rres, 1.0, wfn1);
+         btas::QSDgemm(NoTrans,   NoTrans, 1.0, mps1, rres, 0.0, wfn1);
 
       }
    }
@@ -68,17 +68,30 @@ namespace algorithm {
       }
    }
 
+   /**
+    * use svd to canonicalize tensor, for the two-site algorithm
+    * @param wfnx input two-site object to be decomposed
+    * @param mps0 if forward, mps0 will be the U, or left unitary matrix of the SVD
+    *             else mps0 will be the VT, or right unitary matrix of the SVD
+    * @param wfn1 if forward, wfn1 will be the S * VT, or right part of the svd
+    *             else wfn1 will be the U * S, or left part of the SVD
+    * @param M number of states to be retained in svd
+    */
    void Canonicalize (bool forward, const btas::QSDArray<4>& wfnx, btas::QSDArray<3>& mps0, btas::QSDArray<3>& wfn1, int M) {
 
       if(forward) {
+
          btas::SDArray <1> s;
          btas::QSDgesvd(btas::LeftArrow,  wfnx, s, mps0, wfn1, M);
          btas::Dimm(s, wfn1);
+
       }
       else {
+
          btas::SDArray <1> s;
          btas::QSDgesvd(btas::RightArrow, wfnx, s, wfn1, mps0, M);
          btas::Dimm(wfn1, s);
+
       }
 
    }
@@ -86,19 +99,29 @@ namespace algorithm {
    void Renormalize (bool forward, const btas::QSDArray<4>& mpo0, const btas::QSDArray<3>& opr0, const btas::QSDArray<3>& bra0,
          const btas::QSDArray<3>& ket0, btas::QSDArray<3>& opr1) {
 
-      if(forward) {
+      if(forward){
+
          btas::QSDArray<4> scr1;
-         btas::QSDcontract(1.0, opr0, shape(0), bra0.conjugate(), shape(0), 1.0, scr1);
+         btas::QSDcontract(1.0, opr0, shape(0), bra0.conjugate(), shape(0), 0.0, scr1);
+
          btas::QSDArray<4> scr2;
-         btas::QSDcontract(1.0, scr1, shape(0, 2), mpo0, shape(0, 1), 1.0, scr2);
-         btas::QSDcontract(1.0, scr2, shape(0, 2), ket0, shape(0, 1), 1.0, opr1);
+         btas::QSDcontract(1.0, scr1, shape(0, 2), mpo0, shape(0, 1), 0.0, scr2);
+
+         opr1.clear();
+         btas::QSDcontract(1.0, scr2, shape(0, 2), ket0, shape(0, 1), 0.0, opr1);
+
       }
-      else {
+      else{
+
          btas::QSDArray<4> scr1;
-         btas::QSDcontract(1.0, bra0.conjugate(), shape(2), opr0, shape(0), 1.0, scr1);
+         btas::QSDcontract(1.0, bra0.conjugate(), shape(2), opr0, shape(0), 0.0, scr1);
+
          btas::QSDArray<4> scr2;
-         btas::QSDcontract(1.0, scr1, shape(1, 2), mpo0, shape(1, 3), 1.0, scr2);
-         btas::QSDcontract(1.0, scr2, shape(3, 1), ket0, shape(1, 2), 1.0, opr1);
+         btas::QSDcontract(1.0, scr1, shape(1, 2), mpo0, shape(1, 3), 0.0, scr2);
+
+         opr1.clear();
+         btas::QSDcontract(1.0, scr2, shape(3, 1), ket0, shape(1, 2), 0.0, opr1);
+
       }
 
    }
