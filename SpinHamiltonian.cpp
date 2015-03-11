@@ -140,7 +140,7 @@ namespace SpinHamiltonian {
     * @param Jxy coupling constant > 0
     * @param B magnetic fieldstrength
     */
-   MPO<SpinQuantum> heisenberg(double Jz,double Jxy,double B){
+   MPO<SpinQuantum> heisenberg(double Jxy,double Jz,double B){
 
       MPO<SpinQuantum> mpo(global::L);
 

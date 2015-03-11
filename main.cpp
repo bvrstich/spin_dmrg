@@ -4,18 +4,18 @@ using namespace std;
 
 #include "include.h"
 
+/**
+ * simple dmrg algorithm based on Naoki Nakatini's example dmrg code from the BTAS library.
+ * I added my own MPO's and MPS/MPO functionalities from MPSblas.h
+ **/
 int main(int argc, char* argv[]){
 
    cout.precision(16);
 
-  //
-  // define working space for 20 sites chain
-  //
+   int L =  1000;
+   int D = 81;
 
-   int L =  10;
-   int D = 10;
-
-   int d = 2;
+   int d = 3;
 
    global::init(D,d,L);
 
@@ -28,10 +28,8 @@ int main(int argc, char* argv[]){
    compress(true,mpo,mpsxx::Left,0);
    compress(true,mpo,mpsxx::Right,0);
 
-   cout << mpo << endl;
-
    //initialize the mps structure
-   mpsxx::MPS<Quantum> mps = mpsxx::create<Quantum>(L,Quantum(0),global::qp,10,global::rgen<double>); 
+   mpsxx::MPS<Quantum> mps = mpsxx::create<Quantum>(L,Quantum(0),global::qp,1,global::rgen<double>); 
 
    //and canonicalize it
    compress(true,mps,mpsxx::Left,0);
