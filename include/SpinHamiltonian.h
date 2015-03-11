@@ -18,6 +18,8 @@ namespace SpinHamiltonian {
 
    MPO<SpinQuantum> heisenberg(double,double,double);
 
+   MPO<SpinQuantum> heisenberg(const DArray<2> &,double);
+
    //general functions to make MPO construction easier
    void insert_id(QSDArray<4> &O,int row,int column,double value);
    void insert_Sz(QSDArray<4> &O,int row,int column,double value);

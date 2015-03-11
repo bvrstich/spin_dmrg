@@ -25,7 +25,7 @@ namespace global{
    Qshapes<SpinQuantum> qp;
 
    /**
-    * @param D_in virtual dimension of the trial
+    * @param D_in virtual dimension
     * @param d_in physical dimension
     * @param L_in input length of the chain
     */

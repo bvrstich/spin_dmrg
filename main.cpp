@@ -17,10 +17,10 @@ int main(int argc, char* argv[]){
 
    cout.precision(16);
 
-   int L =  1000;
-   int D = 81;
+   int L =  10;
+   int D = 100;
 
-   int d = 3;
+   int d = 2;
 
    global::init(D,d,L);
 
