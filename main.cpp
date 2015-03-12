@@ -17,10 +17,10 @@ int main(int argc, char* argv[]){
 
    cout.precision(16);
 
-   int L =  10;
-   int D = 100;
+   int L =  16;
+   int D = 256;
 
-   double J2 = 0.1;
+   double J2 = 0.0;
 
    int d = 2;
 
@@ -28,7 +28,7 @@ int main(int argc, char* argv[]){
 
    //set the coupling matrix:
    DArray<2> J(L,L);
-   coupling::J1J2_1D(false,J2,J);
+   coupling::J1J2_2D(true,J2,J);
 
    //set MPO to the Heisenberg model
    mpsxx::MPO<Quantum> mpo = SpinHamiltonian::heisenberg(J,0.0);
