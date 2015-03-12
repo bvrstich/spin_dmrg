@@ -20,7 +20,7 @@ int main(int argc, char* argv[]){
    int L =  16;
    int D = 256;
 
-   double J2 = 0.0;
+   double J2 = 0.5;
 
    int d = 2;
 
@@ -28,7 +28,7 @@ int main(int argc, char* argv[]){
 
    //set the coupling matrix:
    DArray<2> J(L,L);
-   coupling::J1J2_2D(true,J2,J);
+   coupling::J1J2_2D(false,J2,J);
 
    //set MPO to the Heisenberg model
    mpsxx::MPO<Quantum> mpo = SpinHamiltonian::heisenberg(J,0.0);
@@ -40,7 +40,7 @@ int main(int argc, char* argv[]){
    compress(true,mpo,mpsxx::Right,0);
 
    //initialize the mps structure
-   mpsxx::MPS<Quantum> mps = mpsxx::create<Quantum>(L,Quantum(0),global::qp,1,global::rgen<double>); 
+   mpsxx::MPS<Quantum> mps = mpsxx::create<Quantum>(L,Quantum(0),global::qp,20,global::rgen<double>); 
 
    //and canonicalize it
    compress(true,mps,mpsxx::Left,0);
