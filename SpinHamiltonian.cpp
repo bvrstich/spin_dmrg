@@ -845,4 +845,99 @@ namespace SpinHamiltonian {
 
    }
 
+   /**
+    * @param mps input mps object
+    * @return vector containing the expectation value of the Sz operator on site 'index'
+    */
+   std::vector<double> local_spin(const MPS<SpinQuantum> &mps){
+
+      std::vector<double> spin_exp(global::L);
+
+      //local spin operator
+      QSDArray<2> Sz_op;
+
+      TVector<Qshapes<SpinQuantum>,2> qshape = make_array(global::qp,-global::qp);
+
+      Sz_op.resize(SpinQuantum::zero(),qshape);
+
+      double sz = 0.5 * (global::d - 1.0);//size of local spin
+
+      double mz = -sz;
+
+      DArray<2> tmp2(1,1);
+
+      for(int m = 0;m < global::d;++m){
+
+         tmp2 = mz;
+         Sz_op.insert(shape(m,m),tmp2);
+
+         mz += 1.0;
+
+      }
+
+      //first act with operator on mps
+      enum {j,k,l,m};
+
+      MPS<SpinQuantum> mps_spin(global::L);
+
+      for(int i = 0;i < global::L;++i)
+         Contract(1.0,mps[i],shape(j,k,l),Sz_op,shape(m,k),0.0,mps_spin[i],shape(j,m,l));
+
+      //construct renormalized operators
+      std::vector< QSDArray<2> > R(global::L);
+
+      Contract(1.0,mps[global::L-1],shape(1,2),mps[global::L-1].conjugate(),shape(1,2),0.0,R[global::L-1]);
+
+      QSDArray<3> tmp3;
+
+      for(int i = global::L - 1;i > 0;--i){
+
+         tmp3.clear();
+         Contract(1.0,mps[i-1],shape(2),R[i],shape(0),0.0,tmp3);
+
+         Contract(1.0,tmp3,shape(1,2),mps[i-1].conjugate(),shape(1,2),0.0,R[i-1]);
+
+      }
+
+      //now get expectation value
+      
+      //site 0
+      tmp3.clear();
+      Contract(1.0,mps[0],shape(2),R[1],shape(0),0.0,tmp3);
+
+      spin_exp[0] = Dotc(tmp3,mps_spin[0]);
+
+      //update R
+      R[0].clear();
+      Contract(1.0,mps[0],shape(0,1),mps[0].conjugate(),shape(0,1),0.0,R[0]);
+
+      //middle sites
+      for(int i = 1;i < global::L - 1;++i){
+
+         tmp3.clear();
+         Contract(1.0,mps[i],shape(2),R[i+1],shape(0),0.0,tmp3);
+
+         Contract(1.0,tmp3,shape(1,2),mps_spin[i].conjugate(),shape(1,2),0.0,R[i]);
+
+         spin_exp[i] = Dotc(R[i-1],R[i].conjugate());
+
+         //update R
+         tmp3.clear();
+         Contract(1.0,R[i-1],shape(0),mps[i],shape(0),0.0,tmp3);
+
+         R[i].clear();
+         Contract(1.0,tmp3,shape(0,1),mps[i].conjugate(),shape(0,1),0.0,R[i]);
+
+      }
+
+      //last site
+      tmp3.clear();
+      Contract(1.0,R[global::L-2],shape(0),mps[global::L-1],shape(0),0.0,tmp3);
+
+      spin_exp[global::L-1] = Dotc(tmp3,mps_spin[global::L-1]);
+
+      return spin_exp;
+
+   }
+
 }

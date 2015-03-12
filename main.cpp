@@ -17,7 +17,7 @@ int main(int argc, char* argv[]){
 
    cout.precision(16);
 
-   int L =  16;
+   int L =  6;
    int D = 256;
 
    double J2 = 0.5;
@@ -28,7 +28,7 @@ int main(int argc, char* argv[]){
 
    //set the coupling matrix:
    DArray<2> J(L,L);
-   coupling::J1J2_2D(false,J2,J);
+   coupling::J1J2_1D(false,J2,J);
 
    //set MPO to the Heisenberg model
    mpsxx::MPO<Quantum> mpo = SpinHamiltonian::heisenberg(J,0.0);
@@ -40,7 +40,7 @@ int main(int argc, char* argv[]){
    compress(true,mpo,mpsxx::Right,0);
 
    //initialize the mps structure
-   mpsxx::MPS<Quantum> mps = mpsxx::create<Quantum>(L,Quantum(0),global::qp,20,global::rgen<double>); 
+   mpsxx::MPS<Quantum> mps = mpsxx::create<Quantum>(L,Quantum(0),global::qp,1,global::rgen<double>); 
 
    //and canonicalize it
    compress(true,mps,mpsxx::Left,0);
@@ -62,6 +62,25 @@ int main(int argc, char* argv[]){
 
    cout.precision(16);
    cout << "\tGround state energy (one-site) = " << setw(20) << fixed << energy << endl << endl;
+
+   std::vector<double> spin_exp = SpinHamiltonian::local_spin(mps);
+
+   cout << endl;
+   cout << "Expectation value of local Sz on site i:" << endl;
+   cout << endl;
+
+   double total_spin = 0.0;
+
+   for(int i = 0;i < L;++i){
+
+      cout << i << "\t" << spin_exp[i] << endl;
+
+      total_spin += spin_exp[i];
+
+   }
+
+   cout << endl;
+   cout << "Expectation value of total Sz:\t" << total_spin << endl;
 
    return 0;
 
