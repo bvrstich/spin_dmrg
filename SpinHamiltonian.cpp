@@ -700,6 +700,10 @@ namespace SpinHamiltonian {
 
       qi.push_back(SpinQuantum::zero());//C has spin 0
 
+      qshape = make_array(qi,global::qp,-global::qp,qz);
+
+      mpo[global::L - 1].resize(SpinQuantum::zero(),qshape);
+
       insert_Sz(mpo[global::L - 1],0,0,-B);//B
       insert_Sm(mpo[global::L - 1],1,0,1.0);
       insert_Sp(mpo[global::L - 1],2,0,1.0);

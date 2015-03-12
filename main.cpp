@@ -20,12 +20,18 @@ int main(int argc, char* argv[]){
    int L =  10;
    int D = 100;
 
+   double J2 = 0.1;
+
    int d = 2;
 
    global::init(D,d,L);
 
+   //set the coupling matrix:
+   DArray<2> J(L,L);
+   coupling::J1J2_1D(false,J2,J);
+
    //set MPO to the Heisenberg model
-   mpsxx::MPO<Quantum> mpo = SpinHamiltonian::heisenberg(1.0,1.0,0.0);
+   mpsxx::MPO<Quantum> mpo = SpinHamiltonian::heisenberg(J,0.0);
 
    //and canonicalize it
    compress(true,mpo,mpsxx::Left,0);
@@ -56,8 +62,6 @@ int main(int argc, char* argv[]){
 
    cout.precision(16);
    cout << "\tGround state energy (one-site) = " << setw(20) << fixed << energy << endl << endl;
-
-   cout << mps << endl;
 
    return 0;
 

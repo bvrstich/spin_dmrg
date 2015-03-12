@@ -18,3 +18,4 @@ namespace btas { typedef SpinQuantum Quantum; }; // Define SpinQuantum as defaul
 
 #include "SpinHamiltonian.h"
 #include "Random.h"
+#include "coupling.h"
