@@ -239,7 +239,7 @@ namespace algorithm {
             if(fabs(edif) < 1.0e-8)
                break;
          }
-
+  
          return esav;
 
       }
@@ -256,14 +256,19 @@ namespace algorithm {
          Qshapes<Q> qz(1, Q::zero());
          Dshapes dz(qz.size(), 1);
 
-         TVector<Qshapes<Quantum>, 3> qshape = make_array( qz, qz, qz);
-         TVector<Dshapes,          3> dshape = make_array( dz, dz, dz);
+         Qshapes<Q> qt_array(1, global::qt);
+
+         TVector<Qshapes<Q>, 3> qshape = make_array( -qt_array, qz, qt_array);
+         TVector<Dshapes, 3> dshape = make_array( dz, dz, dz);
 
          RO[global::L-1].resize(Q::zero(), qshape, dshape);
          RO[global::L-1] = 1.0;
 
          for(int i = global::L-1; i > 0; --i)
-            Renormalize (0, mpo[i], RO[i], mps[i], mps[i], RO[i-1]);
+            Renormalize(0, mpo[i], RO[i], mps[i], mps[i], RO[i-1]);
+
+         //left operator has 0 quantumnumber
+         qshape = make_array( qz, qz, qz);
 
          LO[0].resize(Q::zero(), qshape, dshape);
          LO[0] = 1.0;
@@ -277,7 +282,9 @@ namespace algorithm {
 
          std::vector< QSDArray<3> > &LO,std::vector< QSDArray<3> > &RO, DMRG_ALGORITHM algo);
 
-   template void init_ro<Quantum>(const mpsxx::MPO<Quantum> &,const mpsxx::MPS<Quantum> &,std::vector< QSDArray<3> > &LO,std::vector< QSDArray<3> > &RO);
+   template void init_ro<Quantum>(const mpsxx::MPO<Quantum> &,const mpsxx::MPS<Quantum> &,
+         
+         std::vector< QSDArray<3> > &LO,std::vector< QSDArray<3> > &RO);
 
    template double optimize_onesite<Quantum>(bool forward,int site, const mpsxx::MPO<Quantum> &, mpsxx::MPS<Quantum> &,
 

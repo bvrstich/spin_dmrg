@@ -36,8 +36,10 @@ namespace global {
    //physical indices
    extern Qshapes<SpinQuantum> qp;
 
+   extern SpinQuantum qt;
+
    //!initializer
-   void init(int,int,int);
+   void init(const SpinQuantum &,int,int,int);
 
    template<typename T>
       T rgen();

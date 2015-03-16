@@ -22,18 +22,23 @@ namespace global{
 
    Random RN;
 
+   SpinQuantum qt;
+
    Qshapes<SpinQuantum> qp;
 
    /**
+    * @param qt_in the input total quantumnumber of the state/system
     * @param D_in virtual dimension
     * @param d_in physical dimension
     * @param L_in input length of the chain
     */
-   void init(int D_in,int d_in,int L_in){
+   void init(const SpinQuantum &qt_in,int D_in,int d_in,int L_in){
 
       L = L_in;
       d = d_in;
       D = D_in;
+
+      qt = qt_in;
 
       //set physical quantum numbers for spinquantum
       qp.clear();

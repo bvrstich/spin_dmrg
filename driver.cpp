@@ -183,8 +183,10 @@ namespace algorithm {
 
       btas::QSDArray<5> scr1;
       btas::QSDcontract(1.0, lopr, shape(2), wfn0, shape(0), 1.0, scr1);
+
       btas::QSDArray<5> scr2;
       btas::QSDcontract(1.0, scr1, shape(1, 2), lmpo, shape(0, 2), 1.0, scr2);
+
       btas::QSDArray<5> scr3;
       btas::QSDcontract(1.0, scr2, shape(4, 1), rmpo, shape(0, 2), 1.0, scr3);
       btas::QSDcontract(1.0, scr3, shape(4, 1), ropr, shape(1, 2), 1.0, sgv0);

@@ -17,14 +17,14 @@ int main(int argc, char* argv[]){
 
    cout.precision(16);
 
-   int L =  6;
+   int L =  10;
    int D = 256;
 
-   double J2 = 0.5;
+   double J2 = 0.0;
 
    int d = 2;
 
-   global::init(D,d,L);
+   global::init(Quantum(2),D,d,L);
 
    //set the coupling matrix:
    DArray<2> J(L,L);
@@ -40,7 +40,7 @@ int main(int argc, char* argv[]){
    compress(true,mpo,mpsxx::Right,0);
 
    //initialize the mps structure
-   mpsxx::MPS<Quantum> mps = mpsxx::create<Quantum>(L,Quantum(0),global::qp,1,global::rgen<double>); 
+   mpsxx::MPS<Quantum> mps = mpsxx::create<Quantum>(L,global::qt,global::qp,1,global::rgen<double>); 
 
    //and canonicalize it
    compress(true,mps,mpsxx::Left,0);
